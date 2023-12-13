@@ -3,13 +3,14 @@
 import logging
 import requests
 from bs4 import BeautifulSoup
+import re
+import glob
+from datetime import datetime
 import configparser
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-import re
-import glob
-from datetime import datetime
+
 
 # Create a logger
 logger = logging.getLogger()
@@ -50,7 +51,7 @@ def send_email(new_date, priority_date):
 
     try:
         subject = 'PERM Processing Times Update'
-        body = f'PERM Processing Times has been updated.\n\nNew Date: {new_date}\nPriority Date for Analyst Review: {priority_date}'
+        body = f'PERM Processing Times have been updated.\n\nLast Update: {new_date}\nPriority Date for Analyst Review: {priority_date}'
 
         for receiver_email in receiver_emails:
             logger.debug(f'Sending email to "{receiver_email}"...')
@@ -67,9 +68,11 @@ def send_email(new_date, priority_date):
                 server.sendmail(sender_email, receiver_email, msg.as_string())
 
             logger.info(f'Email sent successfully to "{receiver_email}".')
+            return 0
 
     except Exception as e:
-        print(f"Error sending email: {e}")
+        logger.error(f"Error sending email: {e}")
+        return 1
 
 
 def dump_content_to_file(content):
@@ -158,7 +161,6 @@ def check_perm_processing_times():
 
     # Fetch the webpage content
     webpage_content = fetch_webpage_content()
-    # content = {'update_date': update_date, 'priority_date': priority_date}
 
     # Get the processing dates from the webpage content
     webpage_dates = get_processing_dates(webpage_content)
@@ -193,7 +195,9 @@ def check_perm_processing_times():
             f'The latest Priority Date for the Analyst Review process is "{webpage_priority_date}" as of "{webpage_update_date}" (was "{local_priority_date}" as of "{local_update_date}").')
 
         # Send email to receivers
-        send_email(webpage_priority_date, webpage_priority_date)
+        rcode = send_email(webpage_update_date, webpage_priority_date)
+        if rcode:
+            exit(0)
     else:
         logger.info(
             f'Processing dates haven\'t been updated since "{webpage_update_date}".')
@@ -207,5 +211,4 @@ def check_perm_processing_times():
 
 
 if __name__ == "__main__":
-    # check_perm_processing_times()
-    send_email('1/1/2023', '12/1/2023')
+    check_perm_processing_times()
