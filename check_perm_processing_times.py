@@ -1,4 +1,17 @@
 #!/usr/bin/env python3
+"""
+check_perm_processing_times.py
+
+This script monitors the PERM processing times on the U.S. Department of Labor website. It compares the latest
+update date with the information stored locally. If there is an update, it sends an email notification to specified
+recipients. Finally it updates the local storage with the new webpage content for the future reference.
+
+Note: Ensure that the script is scheduled to run periodically using a scheduler (e.g., cron) to keep track of updates.
+
+Author: Charles Shi <schrht@gmail.com>
+Create: 2023-12-12
+Update: 2023-12-13
+"""
 
 import logging
 import requests
@@ -10,7 +23,6 @@ import configparser
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-
 
 # Create a logger
 logger = logging.getLogger()
@@ -32,6 +44,16 @@ logger.addHandler(file_handler)
 
 
 def send_email(new_date, priority_date):
+    """
+    Sends an email with PERM processing times update information.
+
+    Args:
+        new_date (str): The updated date of the PERM processing times.
+        priority_date (str): The priority date for Analyst Review.
+
+    Returns:
+        int: Return code. 0 for success, 1 for failure.
+    """
 
     try:
         # Read email configuration
@@ -76,6 +98,12 @@ def send_email(new_date, priority_date):
 
 
 def dump_content_to_file(content):
+    """
+    Dumps the content to a file with a timestamped filename.
+
+    Args:
+        content (str): The content to be dumped to the file.
+    """
 
     # Create a filename with a timestamp
     timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
@@ -89,6 +117,12 @@ def dump_content_to_file(content):
 
 
 def read_last_file_content():
+    """
+    Reads the content from the last file in the series.
+
+    Returns:
+        str: The content read from the last file.
+    """
 
     # Find the latest file in the series
     files = glob.glob('webpage_content_*.txt')
@@ -111,6 +145,12 @@ def read_last_file_content():
 
 
 def fetch_webpage_content():
+    """
+    Fetches the content of the PERM processing times webpage.
+
+    Returns:
+        str: The fetched webpage content.
+    """
 
     url = 'https://flag.dol.gov/processingtimes'
     headers = {
@@ -128,6 +168,15 @@ def fetch_webpage_content():
 
 
 def get_processing_dates(content):
+    """
+    Extracts the processing dates from the webpage content.
+
+    Args:
+        content (str): The webpage content.
+
+    Returns:
+        dict: A dictionary containing 'update_date' and 'priority_date'.
+    """
 
     if content is None:
         return None
@@ -158,6 +207,9 @@ def get_processing_dates(content):
 
 
 def check_perm_processing_times():
+    """
+    Main function to check PERM processing times, send emails, and manage local storage.
+    """
 
     # Fetch the webpage content
     webpage_content = fetch_webpage_content()
