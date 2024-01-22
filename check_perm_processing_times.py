@@ -90,7 +90,8 @@ def send_email(new_date, priority_date):
                 server.sendmail(sender_email, receiver_email, msg.as_string())
 
             logger.info(f'Email sent successfully to "{receiver_email}".')
-            return 0
+
+        return 0
 
     except Exception as e:
         logger.error(f"Error sending email: {e}")
